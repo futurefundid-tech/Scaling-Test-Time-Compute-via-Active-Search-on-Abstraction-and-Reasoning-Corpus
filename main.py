@@ -34,7 +34,7 @@ test_target = np.array(task_data['test'][0]['output'])
 print(f"[Main] Berhasil memuat {len(train_examples)} contoh latihan ARC.")
 
 # 3. Jalankan Solver Active Search
-solver = ActiveSearchSolver(timeout_seconds=30, max_depth=2)
+solver = ActiveSearchSolver(timeout_seconds=60, max_depth=3)
 predicted_output = solver.solve(train_examples, test_input)
 
 # 4. Verifikasi Hasil
