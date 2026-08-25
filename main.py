@@ -1,44 +1,48 @@
 import os
 import json
+import glob
 import numpy as np
 from src.active_search import ActiveSearchSolver
 
-file_path = "007b9283.json"
+def run_batch_evaluation(task_dir: str = "ARC-AGI/data/training", max_tasks: int = 5):
+    """Mengevaluasi Active Search Solver pada beberapa tugas ARC secara otomatis."""
+    json_files = sorted(glob.glob(os.path.join(task_dir, "*.json")))[:max_tasks]
+    
+    if not json_files:
+        print(f"[Main] Tidak ada file JSON ditemukan di {task_dir}.")
+        return
 
-# 1. Cek file lokal 007b9283.json
-if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
-    print(f"[Main] Berhasil menemukan & membaca file soal ARC: {file_path}")
-    with open(file_path, "r") as f:
-        task_data = json.load(f)
-else:
-    print("[Main] File lokal tidak ditemukan, memuat struktur data asli ARC 007b9283 secara langsung...")
-    # Struktur asli soal ARC 007b9283 (mengganti warna/isi grid sesuai aturan ARC)
-    task_data = {
-        "train": [
-            {"input": [[0, 0, 0], [0, 3, 0], [0, 0, 0]], "output": [[3, 3, 3], [3, 3, 3], [3, 3, 3]]},
-            {"input": [[0, 0, 0], [0, 7, 0], [0, 0, 0]], "output": [[7, 7, 7], [7, 7, 7], [7, 7, 7]]}
-        ],
-        "test": [
-            {"input": [[0, 0, 0], [0, 4, 0], [0, 0, 0]], "output": [[4, 4, 4], [4, 4, 4], [4, 4, 4]]}
-        ]
-    }
+    print(f"[Main] Memulai Evaluasi Batch pada {len(json_files)} tugas ARC...\n")
+    solver = ActiveSearchSolver(timeout_seconds=15, max_depth=2)
+    
+    results = {}
+    total_passed = 0
 
-# 2. Konversi data ke array NumPy
-train_examples = [
-    (np.array(ex['input']), np.array(ex['output']))
-    for ex in task_data['train']
-]
-test_input = np.array(task_data['test'][0]['input'])
-test_target = np.array(task_data['test'][0]['output'])
+    for filepath in json_files:
+        task_name = os.path.basename(filepath).replace(".json", "")
+        with open(filepath, "r") as f:
+            task_data = json.load(f)
 
-print(f"[Main] Berhasil memuat {len(train_examples)} contoh latihan ARC.")
+        train_examples = [(np.array(ex['input']), np.array(ex['output'])) for ex in task_data['train']]
+        test_input = np.array(task_data['test'][0]['input'])
+        test_target = np.array(task_data['test'][0]['output'])
 
-# 3. Jalankan Solver Active Search
-solver = ActiveSearchSolver(timeout_seconds=60, max_depth=3)
-predicted_output = solver.solve(train_examples, test_input)
+        predicted_output = solver.solve(train_examples, test_input)
+        is_correct = predicted_output is not None and np.array_equal(predicted_output, test_target)
+        
+        if is_correct:
+            total_passed += 1
+            results[task_name] = "SUKSES"
+        else:
+            results[task_name] = "GAGAL"
 
-# 4. Verifikasi Hasil
-if predicted_output is not None:
-    is_correct = np.array_equal(predicted_output, test_target)
-    print(f"\n--- Hasil Evaluasi Tugas ARC ---")
-    print(f"Status Akurasi Tugas: {'100% SUKSES' if is_correct else 'BELUM TEPAT'}")
+        print(f"Task {task_name}: {'✅ SUKSES' if is_correct else '❌ GAGAL'}\n")
+
+    accuracy = (total_passed / len(json_files)) * 100
+    print(f"--- RANGKUMAN EVALUASI BATCH ---")
+    print(f"Total Tugas Diuji : {len(json_files)}")
+    print(f"Berhasil Dikelola : {total_passed}")
+    print(f"Tingkat Akurasi   : {accuracy:.1f}%\n")
+
+if __name__ == "__main__":
+    run_batch_evaluation()
