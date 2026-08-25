@@ -4,13 +4,13 @@ import glob
 import numpy as np
 from src.active_search import ActiveSearchSolver
 
-# Cari file 007b9283.json secara otomatis di seluruh folder ARC-AGI
+# Cari file 007b9283.json secara otomatis hingga ke root Colab (/content)
 task_id = "007b9283.json"
-found_files = glob.glob(f"**/{task_id}", recursive=True)
+found_files = glob.glob(f"/content/**/{task_id}", recursive=True) + glob.glob(f"**/{task_id}", recursive=True)
 
 if found_files:
     local_dataset_path = found_files[0]
-    print(f"[Main] Memuat data tugas ARC dari file lokal: {local_dataset_path}...")
+    print(f"[Main] Berhasil menemukan & memuat file ARC asli: {local_dataset_path}")
     with open(local_dataset_path, "r") as f:
         task_data = json.load(f)
 else:
