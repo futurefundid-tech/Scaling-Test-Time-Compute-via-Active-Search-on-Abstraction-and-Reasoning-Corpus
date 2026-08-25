@@ -24,7 +24,6 @@ class DSLPrimitives:
         result = np.copy(grid)
         non_zero_vals = result[result > 0]
         if len(non_zero_vals) > 0:
-            # Ambil warna utama yang muncul di grid
             val = non_zero_vals[0]
             result[result == 0] = val
         return result
