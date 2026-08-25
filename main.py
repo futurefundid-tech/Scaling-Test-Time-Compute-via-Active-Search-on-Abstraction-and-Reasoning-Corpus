@@ -3,12 +3,23 @@ import urllib.request
 import numpy as np
 from src.active_search import ActiveSearchSolver
 
-# 1. Unduh contoh tugas asli ARC dari repositori resmi
+# 1. URL data tugas asli ARC (007b9283.json) dari branch main official
 url = "https://raw.githubusercontent.com/fchollet/ARC-AGI/main/data/training/007b9283.json"
 print("[Main] Mengunduh data tugas asli ARC (007b9283.json)...")
 
-with urllib.request.urlopen(url) as response:
-    task_data = json.loads(response.read().decode())
+req = urllib.request.Request(
+    url, 
+    headers={'User-Agent': 'Mozilla/5.0'}
+)
+
+try:
+    with urllib.request.urlopen(req) as response:
+        task_data = json.loads(response.read().decode())
+except Exception:
+    # Backup URL jika terjadi masalah koneksi/link
+    backup_url = "https://raw.githubusercontent.com/arcprize/ARC-AGI/main/data/training/007b9283.json"
+    with urllib.request.urlopen(backup_url) as response:
+        task_data = json.loads(response.read().decode())
 
 # 2. Konversi format data JSON ke numpy array
 train_examples = [
