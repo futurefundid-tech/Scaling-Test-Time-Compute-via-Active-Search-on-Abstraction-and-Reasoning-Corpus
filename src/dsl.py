@@ -2,10 +2,10 @@ import numpy as np
 from typing import List, Callable
 
 class ARCOperations:
-    """Kumpulan fungsi operasi DSL untuk manipulasi matriks ARC."""
+    """Primitif DSL untuk tugas ARC."""
 
     @staticmethod
-    def get_all_primitives() -> List[Callable[[np.ndarray], np.ndarray]]:
+    def get_all_operations() -> List[Callable[[np.ndarray], np.ndarray]]:
         return [
             ARCOperations.identity,
             ARCOperations.fill_non_zero,
@@ -14,13 +14,17 @@ class ARCOperations:
             ARCOperations.flip_vertical,
         ]
 
+    # Alias untuk kompatibilitas
+    @staticmethod
+    def get_all_primitives() -> List[Callable[[np.ndarray], np.ndarray]]:
+        return ARCOperations.get_all_operations()
+
     @staticmethod
     def identity(grid: np.ndarray) -> np.ndarray:
         return np.copy(grid)
 
     @staticmethod
     def fill_non_zero(grid: np.ndarray) -> np.ndarray:
-        """Mengubah sel kosong menjadi warna target dari sel yang terisi."""
         result = np.copy(grid)
         non_zero_vals = result[result > 0]
         if len(non_zero_vals) > 0:
