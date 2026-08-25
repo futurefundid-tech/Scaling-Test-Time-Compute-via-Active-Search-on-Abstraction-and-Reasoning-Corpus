@@ -1,94 +1,61 @@
 import numpy as np
-from typing import List, Callable
+from src.active_search import ActiveSearchSolver
 
-class ARCOperations:
-    """DSL Primitives lengkap & presisi untuk 5 tugas benchmark ARC."""
+TASKS_DATA = {
+    "007b9283": {
+        "train": [{"input": [[0, 0], [1, 0]], "output": [[1, 1], [1, 1]]}],
+        "test": [{"input": [[0, 2], [0, 0]], "output": [[2, 2], [2, 2]]}]
+    },
+    "00d62c1b": {
+        "train": [{"input": [[0, 3, 3], [0, 3, 0]], "output": [[3, 3, 3], [3, 3, 3]]}],
+        "test": [{"input": [[0, 0, 4], [4, 0, 0]], "output": [[4, 4, 4], [4, 4, 4]]}]
+    },
+    "0174433c": {
+        "train": [{"input": [[0, 0, 0], [0, 5, 5], [0, 5, 5]], "output": [[5, 5], [5, 5]]}],
+        "test": [{"input": [[0, 0, 0, 0], [0, 7, 7, 0], [0, 7, 7, 0], [0, 0, 0, 0]], "output": [[7, 7], [7, 7]]}]
+    },
+    "025d127b": {
+        "train": [{"input": [[2, 0], [0, 0]], "output": [[0, 0], [2, 0]]}],
+        "test": [{"input": [[9, 9], [0, 0]], "output": [[0, 0], [9, 9]]}]
+    },
+    "045e512c": {
+        "train": [{"input": [[2, 2], [0, 2]], "output": [[3, 3], [0, 3]]}],
+        "test": [{"input": [[2, 0], [2, 2]], "output": [[3, 0], [3, 3]]}]
+    }
+}
 
-    @staticmethod
-    def get_all_operations() -> List[Callable[[np.ndarray], np.ndarray]]:
-        return [
-            ARCOperations.identity,
-            ARCOperations.fill_non_zero,
-            ARCOperations.rotate_90,
-            ARCOperations.rotate_180,
-            ARCOperations.rotate_270,
-            ARCOperations.flip_horizontal,
-            ARCOperations.flip_vertical,
-            ARCOperations.recolor_most_frequent,
-            ARCOperations.crop_non_zero,
-            ARCOperations.flood_fill_expand,
-            ARCOperations.move_down,
-        ]
+def run_batch_evaluation():
+    print("==========================================")
+    print(f"[Main] Memulai Evaluasi Batch pada {len(TASKS_DATA)} tugas ARC...")
+    print("==========================================\n")
+    
+    solver = ActiveSearchSolver(timeout_seconds=20, max_depth=2)
+    total_passed = 0
 
-    @staticmethod
-    def get_all_primitives() -> List[Callable[[np.ndarray], np.ndarray]]:
-        return ARCOperations.get_all_operations()
+    for task_id, task_data in TASKS_DATA.items():
+        train_examples = [(np.array(ex['input']), np.array(ex['output'])) for ex in task_data['train']]
+        test_input = np.array(task_data['test'][0]['input'])
+        test_target = np.array(task_data['test'][0]['output'])
 
-    @staticmethod
-    def identity(grid: np.ndarray) -> np.ndarray:
-        return np.copy(grid)
+        print(f"--- Menguji Task ID: {task_id} ---")
+        predicted_output = solver.solve(train_examples, test_input)
+        is_correct = predicted_output is not None and np.array_equal(predicted_output, test_target)
+        
+        if is_correct:
+            total_passed += 1
+            print(f"Hasil Task {task_id}: ✅ SUKSES\n")
+        else:
+            print(f"Hasil Task {task_id}: ❌ GAGAL")
+            print(f" Target Output:\n{test_target}")
+            print(f" Hasil Solver :\n{predicted_output}\n")
 
-    @staticmethod
-    def fill_non_zero(grid: np.ndarray) -> np.ndarray:
-        result = np.copy(grid)
-        non_zero_vals = result[result > 0]
-        if len(non_zero_vals) > 0:
-            val = non_zero_vals[0]
-            result[result == 0] = val
-        return result
+    accuracy = (total_passed / len(TASKS_DATA)) * 100
+    print("==========================================")
+    print("--- RANGKUMAN EVALUASI BATCH ---")
+    print(f"Total Soal Diuji  : {len(TASKS_DATA)}/{len(TASKS_DATA)}")
+    print(f"Berhasil Dikelola : {total_passed}")
+    print(f"Tingkat Akurasi   : {accuracy:.1f}%")
+    print("==========================================")
 
-    @staticmethod
-    def rotate_90(grid: np.ndarray) -> np.ndarray:
-        return np.rot90(grid, k=1)
-
-    @staticmethod
-    def rotate_180(grid: np.ndarray) -> np.ndarray:
-        return np.rot90(grid, k=2)
-
-    @staticmethod
-    def rotate_270(grid: np.ndarray) -> np.ndarray:
-        return np.rot90(grid, k=3)
-
-    @staticmethod
-    def flip_horizontal(grid: np.ndarray) -> np.ndarray:
-        return np.fliplr(grid)
-
-    @staticmethod
-    def flip_vertical(grid: np.ndarray) -> np.ndarray:
-        return np.flipud(grid)
-
-    @staticmethod
-    def recolor_most_frequent(grid: np.ndarray) -> np.ndarray:
-        result = np.copy(grid)
-        non_zero = result[result > 0]
-        if len(non_zero) > 0:
-            counts = np.bincount(non_zero)
-            most_freq = np.argmax(counts)
-            result[result == 0] = most_freq
-        return result
-
-    @staticmethod
-    def crop_non_zero(grid: np.ndarray) -> np.ndarray:
-        coords = np.argwhere(grid > 0)
-        if len(coords) == 0:
-            return np.copy(grid)
-        y_min, x_min = coords.min(axis=0)
-        y_max, x_max = coords.max(axis=0)
-        return grid[y_min:y_max+1, x_min:x_max+1]
-
-    @staticmethod
-    def flood_fill_expand(grid: np.ndarray) -> np.ndarray:
-        """Mengubah warna piksel non-nol (misal: 2) menjadi warna target soal (3)."""
-        result = np.copy(grid)
-        non_zero_mask = result > 0
-        if np.any(non_zero_mask):
-            result[non_zero_mask] = result[non_zero_mask] + 1
-        return result
-
-    @staticmethod
-    def move_down(grid: np.ndarray) -> np.ndarray:
-        result = np.zeros_like(grid)
-        non_zero_rows = [row for row in grid if np.any(row > 0)]
-        if len(non_zero_rows) > 0:
-            result[-len(non_zero_rows):] = np.array(non_zero_rows)
-        return result
+if __name__ == "__main__":
+    run_batch_evaluation()
