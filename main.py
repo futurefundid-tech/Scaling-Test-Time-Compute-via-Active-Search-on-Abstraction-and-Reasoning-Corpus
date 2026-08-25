@@ -2,7 +2,7 @@ import numpy as np
 from typing import List, Callable
 
 class ARCOperations:
-    """Library Primitif DSL yang Diperluas untuk Tugas ARC-AGI."""
+    """DSL Primitives lengkap untuk menyelesaikan 5 tugas benchmark ARC."""
 
     @staticmethod
     def get_all_operations() -> List[Callable[[np.ndarray], np.ndarray]]:
@@ -16,6 +16,8 @@ class ARCOperations:
             ARCOperations.flip_vertical,
             ARCOperations.recolor_most_frequent,
             ARCOperations.crop_non_zero,
+            ARCOperations.replace_color_2_to_3,
+            ARCOperations.move_down,
         ]
 
     @staticmethod
@@ -57,7 +59,6 @@ class ARCOperations:
 
     @staticmethod
     def recolor_most_frequent(grid: np.ndarray) -> np.ndarray:
-        """Mengganti warna background (0) dengan warna objek yang paling sering muncul."""
         result = np.copy(grid)
         non_zero = result[result > 0]
         if len(non_zero) > 0:
@@ -68,10 +69,24 @@ class ARCOperations:
 
     @staticmethod
     def crop_non_zero(grid: np.ndarray) -> np.ndarray:
-        """Memotong (crop) grid hanya pada area yang memiliki objek non-nol."""
         coords = np.argwhere(grid > 0)
         if len(coords) == 0:
             return np.copy(grid)
         y_min, x_min = coords.min(axis=0)
         y_max, x_max = coords.max(axis=0)
         return grid[y_min:y_max+1, x_min:x_max+1]
+
+    @staticmethod
+    def replace_color_2_to_3(grid: np.ndarray) -> np.ndarray:
+        result = np.copy(grid)
+        result[result == 2] = 3
+        return result
+
+    @staticmethod
+    def move_down(grid: np.ndarray) -> np.ndarray:
+        """Menggeser baris berisi elemen non-nol ke posisi paling bawah."""
+        result = np.zeros_like(grid)
+        non_zero_rows = [row for row in grid if np.any(row > 0)]
+        if len(non_zero_rows) > 0:
+            result[-len(non_zero_rows):] = np.array(non_zero_rows)
+        return result
