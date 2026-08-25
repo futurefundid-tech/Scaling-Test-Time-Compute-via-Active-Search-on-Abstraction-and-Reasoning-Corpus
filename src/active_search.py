@@ -5,7 +5,7 @@ from src.dsl import ARCOperations
 from src.evaluator import TaskEvaluator
 
 class ActiveSearchSolver:
-    def __init__(self, timeout_seconds: int = 20, max_depth: int = 2):
+    def __init__(self, timeout_seconds: int = 15, max_depth: int = 3):
         self.timeout_seconds = timeout_seconds
         self.max_depth = max_depth
         self.operations = ARCOperations.get_all_operations()
@@ -29,8 +29,13 @@ class ActiveSearchSolver:
                 return
 
             for op in self.operations:
+                # Hindari fungsi identitas berulang
+                if op == ARCOperations.identity:
+                    continue
                 combined_fn = lambda g, f1=current_fn, f2=op: f2(f1(g))
                 search(combined_fn, depth + 1)
+                if best_score == 1.0:
+                    break
 
         for op in self.operations:
             search(op, 1)
