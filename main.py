@@ -1,20 +1,20 @@
-import os
 import json
-import glob
+import urllib.request
 import numpy as np
 from src.active_search import ActiveSearchSolver
 
-# Cari file 007b9283.json secara otomatis hingga ke root Colab (/content)
-task_id = "007b9283.json"
-found_files = glob.glob(f"/content/**/{task_id}", recursive=True) + glob.glob(f"**/{task_id}", recursive=True)
+# URL resmi file soal ARC (007b9283.json)
+url = "https://raw.githubusercontent.com/fchollet/ARC-AGI/main/data/training/007b9283.json"
 
-if found_files:
-    local_dataset_path = found_files[0]
-    print(f"[Main] Berhasil menemukan & memuat file ARC asli: {local_dataset_path}")
-    with open(local_dataset_path, "r") as f:
-        task_data = json.load(f)
-else:
-    print("[Main] File dataset ARC lokal tidak ditemukan, menggunakan data simulasi ARC...")
+print("[Main] Mengunduh data tugas asli ARC (007b9283.json)...")
+
+try:
+    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    with urllib.request.urlopen(req) as response:
+        task_data = json.loads(response.read().decode())
+    print("[Main] Berhasil mengunduh soal ARC asli!")
+except Exception as e:
+    print(f"[Main] Gagal mengunduh ({e}), menggunakan data simulasi cadangan...")
     task_data = {
         "train": [
             {"input": [[1, 0], [0, 0]], "output": [[0, 1], [0, 0]]},
