@@ -1,17 +1,17 @@
 import numpy as np
 from typing import List, Callable
 
-class DSLPrimitives:
-    """Kumpulan fungsi primitif DSL untuk manipulasi matriks ARC."""
+class ARCOperations:
+    """Kumpulan fungsi operasi DSL untuk manipulasi matriks ARC."""
 
     @staticmethod
     def get_all_primitives() -> List[Callable[[np.ndarray], np.ndarray]]:
         return [
-            DSLPrimitives.identity,
-            DSLPrimitives.fill_non_zero,
-            DSLPrimitives.rotate_90,
-            DSLPrimitives.flip_horizontal,
-            DSLPrimitives.flip_vertical,
+            ARCOperations.identity,
+            ARCOperations.fill_non_zero,
+            ARCOperations.rotate_90,
+            ARCOperations.flip_horizontal,
+            ARCOperations.flip_vertical,
         ]
 
     @staticmethod
@@ -20,7 +20,7 @@ class DSLPrimitives:
 
     @staticmethod
     def fill_non_zero(grid: np.ndarray) -> np.ndarray:
-        """Mengubah seluruh sel bernilai non-nol menjadi warna dominan/target."""
+        """Mengubah sel kosong menjadi warna target dari sel yang terisi."""
         result = np.copy(grid)
         non_zero_vals = result[result > 0]
         if len(non_zero_vals) > 0:
