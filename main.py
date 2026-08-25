@@ -4,7 +4,7 @@ import glob
 import numpy as np
 from src.active_search import ActiveSearchSolver
 
-# Cari file 007b9283.json secara otomatis di seluruh direktori
+# Cari file 007b9283.json secara otomatis di seluruh folder ARC-AGI
 task_id = "007b9283.json"
 found_files = glob.glob(f"**/{task_id}", recursive=True)
 
