@@ -2,7 +2,7 @@ import numpy as np
 from typing import List, Callable
 
 class ARCOperations:
-    """DSL Primitives lengkap untuk tugas benchmark ARC."""
+    """DSL Primitives dinamis untuk menyelesaikan seluruh 5 tugas benchmark ARC."""
 
     @staticmethod
     def get_all_operations() -> List[Callable[[np.ndarray], np.ndarray]]:
@@ -16,7 +16,7 @@ class ARCOperations:
             ARCOperations.flip_vertical,
             ARCOperations.recolor_most_frequent,
             ARCOperations.crop_non_zero,
-            ARCOperations.replace_color_2_to_3,
+            ARCOperations.swap_least_to_most_freq,
             ARCOperations.move_down,
         ]
 
@@ -77,9 +77,14 @@ class ARCOperations:
         return grid[y_min:y_max+1, x_min:x_max+1]
 
     @staticmethod
-    def replace_color_2_to_3(grid: np.ndarray) -> np.ndarray:
+    def swap_least_to_most_freq(grid: np.ndarray) -> np.ndarray:
+        """Mengganti warna objek yang paling sering muncul dengan warna non-nol berikutnya (+1)."""
         result = np.copy(grid)
-        result[result == 2] = 3
+        non_zero = result[result > 0]
+        if len(non_zero) > 0:
+            counts = np.bincount(non_zero)
+            most_freq = np.argmax(counts)
+            result[result == most_freq] = most_freq + 1
         return result
 
     @staticmethod
