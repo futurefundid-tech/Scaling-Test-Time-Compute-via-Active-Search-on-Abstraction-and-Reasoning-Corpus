@@ -5,7 +5,7 @@ from src.dsl import ARCOperations
 from src.evaluator import TaskEvaluator
 
 class ActiveSearchSolver:
-    def __init__(self, timeout_seconds: int = 15, max_depth: int = 3):
+    def __init__(self, timeout_seconds: int = 20, max_depth: int = 2):
         self.timeout_seconds = timeout_seconds
         self.max_depth = max_depth
         self.operations = ARCOperations.get_all_operations()
@@ -15,32 +15,36 @@ class ActiveSearchSolver:
         best_score = 0.0
         best_fn = None
 
-        def search(current_fn: Callable, depth: int):
-            nonlocal best_score, best_fn
-            if time.time() - start_time > self.timeout_seconds:
-                return
+        # Helper untuk menggabungkan dua fungsi secara eksplisit
+        def compose(f1: Callable, f2: Callable) -> Callable:
+            return lambda g: f2(f1(g))
 
-            score = TaskEvaluator.evaluate_candidate(current_fn, train_examples)
+        # 1. Uji Depth 1 (Single Operation)
+        for op in self.operations:
+            if time.time() - start_time > self.timeout_seconds:
+                break
+            score = TaskEvaluator.evaluate_candidate(op, train_examples)
             if score > best_score:
                 best_score = score
-                best_fn = current_fn
-
-            if score == 1.0 or depth >= self.max_depth:
-                return
-
-            for op in self.operations:
-                # Hindari fungsi identitas berulang
-                if op == ARCOperations.identity:
-                    continue
-                combined_fn = lambda g, f1=current_fn, f2=op: f2(f1(g))
-                search(combined_fn, depth + 1)
-                if best_score == 1.0:
-                    break
-
-        for op in self.operations:
-            search(op, 1)
+                best_fn = op
             if best_score == 1.0:
                 break
+
+        # 2. Uji Depth 2 (Kombinasi 2 Operasi)
+        if best_score < 1.0 and self.max_depth >= 2:
+            for op1 in self.operations:
+                for op2 in self.operations:
+                    if time.time() - start_time > self.timeout_seconds:
+                        break
+                    combined_fn = compose(op1, op2)
+                    score = TaskEvaluator.evaluate_candidate(combined_fn, train_examples)
+                    if score > best_score:
+                        best_score = score
+                        best_fn = combined_fn
+                    if best_score == 1.0:
+                        break
+                if best_score == 1.0:
+                    break
 
         if best_fn is not None:
             try:
