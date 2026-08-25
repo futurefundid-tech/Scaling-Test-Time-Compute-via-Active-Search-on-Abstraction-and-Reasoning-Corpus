@@ -1,15 +1,16 @@
 import os
 import json
+import glob
 import numpy as np
 from src.active_search import ActiveSearchSolver
 
-# Path file lokal hasil clone dataset ARC
+# Cari file 007b9283.json secara otomatis di seluruh direktori
 task_id = "007b9283.json"
-local_dataset_path = os.path.join("ARC-AGI", "data", "training", task_id)
+found_files = glob.glob(f"**/{task_id}", recursive=True)
 
-# Jika dataset belum terunduh lokal, buat dummy data sebagai fallback aman
-if os.path.exists(local_dataset_path):
-    print(f"[Main] Memuat data tugas ARC dari file lokal: {task_id}...")
+if found_files:
+    local_dataset_path = found_files[0]
+    print(f"[Main] Memuat data tugas ARC dari file lokal: {local_dataset_path}...")
     with open(local_dataset_path, "r") as f:
         task_data = json.load(f)
 else:
