@@ -1,20 +1,17 @@
 import json
-import urllib.request
+import os
 import numpy as np
 from src.active_search import ActiveSearchSolver
 
-# URL resmi file soal ARC (007b9283.json)
-url = "https://raw.githubusercontent.com/fchollet/ARC-AGI/main/data/training/007b9283.json"
+file_path = "007b9283.json"
 
-print("[Main] Mengunduh data tugas asli ARC (007b9283.json)...")
-
-try:
-    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-    with urllib.request.urlopen(req) as response:
-        task_data = json.loads(response.read().decode())
-    print("[Main] Berhasil mengunduh soal ARC asli!")
-except Exception as e:
-    print(f"[Main] Gagal mengunduh ({e}), menggunakan data simulasi cadangan...")
+# Cek apakah file hasil download wget ada
+if os.path.exists(file_path):
+    print(f"[Main] Berhasil membaca file soal ARC asli lokal: {file_path}")
+    with open(file_path, "r") as f:
+        task_data = json.load(f)
+else:
+    print("[Main] File tidak ditemukan, menggunakan data simulasi...")
     task_data = {
         "train": [
             {"input": [[1, 0], [0, 0]], "output": [[0, 1], [0, 0]]},
