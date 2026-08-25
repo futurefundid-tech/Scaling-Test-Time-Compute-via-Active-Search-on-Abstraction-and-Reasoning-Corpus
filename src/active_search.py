@@ -43,24 +43,3 @@ class ActiveSearchSolver:
             except Exception:
                 return None
         return None
-                best_fn = current_fn
-
-            if score == 1.0 or depth >= self.max_depth:
-                return
-
-            for op in self.operations:
-                combined_fn = lambda g, f1=current_fn, f2=op: f2(f1(g))
-                search(combined_fn, depth + 1)
-
-        for op in self.operations:
-            search(op, 1)
-            if best_score == 1.0:
-                break
-
-        print(f"[ActiveSearch] Selesai. Skor terbaik: {best_score:.2f}")
-        if best_fn is not None:
-            try:
-                return best_fn(test_input)
-            except Exception:
-                return None
-        return None
