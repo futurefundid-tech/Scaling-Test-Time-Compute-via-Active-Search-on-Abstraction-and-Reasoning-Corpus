@@ -1,25 +1,20 @@
-from typing import Callable, List, Tuple
 import numpy as np
+from typing import List, Tuple, Callable
 
 class TaskEvaluator:
-    """Modul untuk menilai kesesuaian (fitness) fungsi DSL terhadap contoh latihan ARC."""
-
     @staticmethod
     def evaluate_candidate(candidate_fn: Callable, train_examples: List[Tuple[np.ndarray, np.ndarray]]) -> float:
-        """Mengembalikan skor akurasi (0.0 - 1.0) dari kandidat fungsi pada set latihan."""
-        correct_count = 0
-        total_examples = len(train_examples)
-
-        if total_examples == 0:
+        """Menghitung akurasi kandidat fungsi terhadap contoh data latih."""
+        if not train_examples:
             return 0.0
 
-        for input_grid, target_grid in train_examples:
+        correct = 0
+        for train_in, train_out in train_examples:
             try:
-                predicted_grid = candidate_fn(input_grid)
-                if np.array_equal(predicted_grid, target_grid):
-                    correct_count += 1
+                pred = candidate_fn(train_in)
+                if pred is not None and np.array_equal(pred, train_out):
+                    correct += 1
             except Exception:
-                # Jika transformasi gagal (misal ukuran tidak cocok), lewati
-                pass
+                return 0.0
 
-        return correct_count / total_examples
+        return correct / len(train_examples)
