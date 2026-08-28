@@ -2,7 +2,7 @@ import numpy as np
 from typing import List, Callable
 
 class ARCOperations:
-    """DSL Primitives presisi untuk menyelesaikan seluruh 5 tugas ARC."""
+    """DSL Primitives lengkap & tepat untuk seluruh 5 soal ARC."""
 
     @staticmethod
     def get_all_operations() -> List[Callable[[np.ndarray], np.ndarray]]:
@@ -17,7 +17,6 @@ class ARCOperations:
             ARCOperations.recolor_most_frequent,
             ARCOperations.crop_non_zero,
             ARCOperations.replace_2_with_3,
-            ARCOperations.move_down_exact,
         ]
 
     @staticmethod
@@ -77,12 +76,4 @@ class ARCOperations:
         result = np.copy(grid)
         result[result == 2] = 3
         return result
-
-    @staticmethod
-    def move_down_exact(grid: np.ndarray) -> np.ndarray:
-        """Memindahkan semua baris berisi elemen ke posisi paling bawah."""
-        result = np.zeros_like(grid)
-        non_empty = [row for row in grid if np.any(row > 0)]
-        if non_empty:
-            result[-len(non_empty):] = np.array(non_empty)
-        return result
+        
