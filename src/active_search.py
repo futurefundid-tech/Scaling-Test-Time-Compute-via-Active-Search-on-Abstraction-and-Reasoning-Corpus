@@ -18,7 +18,7 @@ class ActiveSearchSolver:
         def compose(f1: Callable, f2: Callable) -> Callable:
             return lambda g: f2(f1(g))
 
-        # 1. Depth 1 Evaluation
+        # Evaluasi Depth 1 (Single Primitive)
         for op in self.operations:
             if time.time() - start_time > self.timeout_seconds:
                 break
@@ -27,9 +27,9 @@ class ActiveSearchSolver:
                 best_score = score
                 best_fn = op
             if best_score == 1.0:
-                break
+                break  # Berhenti langsung jika sudah 100% cocok
 
-        # 2. Depth 2 Evaluation
+        # Evaluasi Depth 2 (Kombinasi 2 Primitives) HANYA jika Depth 1 belum 1.0
         if best_score < 1.0 and self.max_depth >= 2:
             for op1 in self.operations:
                 for op2 in self.operations:
