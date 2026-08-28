@@ -1,9 +1,6 @@
-import os
-import json
 import numpy as np
 from src.active_search import ActiveSearchSolver
 
-# 5 Tugas Simulasi ARC dengan variasi aturan visual
 TASKS_DATA = {
     "007b9283": {
         "train": [{"input": [[0, 0], [1, 0]], "output": [[1, 1], [1, 1]]}],
