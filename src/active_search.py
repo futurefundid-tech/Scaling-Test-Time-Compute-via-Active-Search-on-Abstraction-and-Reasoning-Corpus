@@ -1,74 +1,60 @@
+import time
+from typing import List, Tuple, Optional, Callable
 import numpy as np
-from typing import List, Callable
+from src.dsl import ARCOperations
 
-class ARCOperations:
-    @staticmethod
-    def get_all_operations() -> List[Callable[[np.ndarray], np.ndarray]]:
-        return [
-            ARCOperations.identity,
-            ARCOperations.fill_non_zero,
-            ARCOperations.rotate_90,
-            ARCOperations.rotate_180,
-            ARCOperations.rotate_270,
-            ARCOperations.flip_horizontal,
-            ARCOperations.flip_vertical,
-            ARCOperations.recolor_most_frequent,
-            ARCOperations.crop_non_zero,
-            ARCOperations.replace_2_with_3,
-        ]
+class ActiveSearchSolver:
+    def __init__(self, timeout_seconds: int = 20, max_depth: int = 2):
+        self.timeout_seconds = timeout_seconds
+        self.max_depth = max_depth
+        self.operations = ARCOperations.get_all_operations()
 
-    @staticmethod
-    def identity(grid: np.ndarray) -> np.ndarray:
-        return np.copy(grid)
+    def _evaluate(self, fn: Callable, train_examples: List[Tuple[np.ndarray, np.ndarray]]) -> float:
+        correct = 0
+        for train_in, train_out in train_examples:
+            try:
+                pred = fn(train_in)
+                if pred is not None and np.array_equal(pred, train_out):
+                    correct += 1
+            except Exception:
+                return 0.0
+        return correct / len(train_examples)
 
-    @staticmethod
-    def fill_non_zero(grid: np.ndarray) -> np.ndarray:
-        result = np.copy(grid)
-        non_zero_vals = result[result > 0]
-        if len(non_zero_vals) > 0:
-            result[result == 0] = non_zero_vals[0]
-        return result
+    def solve(self, train_examples: List[Tuple[np.ndarray, np.ndarray]], test_input: np.ndarray) -> Optional[np.ndarray]:
+        start_time = time.time()
+        best_score = 0.0
+        best_fn = None
 
-    @staticmethod
-    def rotate_90(grid: np.ndarray) -> np.ndarray:
-        return np.rot90(grid, k=1)
+        # Search Depth 1
+        for op in self.operations:
+            if time.time() - start_time > self.timeout_seconds:
+                break
+            score = self._evaluate(op, train_examples)
+            if score > best_score:
+                best_score = score
+                best_fn = op
+            if best_score == 1.0:
+                break  # Early exit
 
-    @staticmethod
-    def rotate_180(grid: np.ndarray) -> np.ndarray:
-        return np.rot90(grid, k=2)
+        # Search Depth 2
+        if best_score < 1.0 and self.max_depth >= 2:
+            for op1 in self.operations:
+                for op2 in self.operations:
+                    if time.time() - start_time > self.timeout_seconds:
+                        break
+                    combined_fn = lambda g, f1=op1, f2=op2: f2(f1(g))
+                    score = self._evaluate(combined_fn, train_examples)
+                    if score > best_score:
+                        best_score = score
+                        best_fn = combined_fn
+                    if best_score == 1.0:
+                        break
+                if best_score == 1.0:
+                    break
 
-    @staticmethod
-    def rotate_270(grid: np.ndarray) -> np.ndarray:
-        return np.rot90(grid, k=3)
-
-    @staticmethod
-    def flip_horizontal(grid: np.ndarray) -> np.ndarray:
-        return np.fliplr(grid)
-
-    @staticmethod
-    def flip_vertical(grid: np.ndarray) -> np.ndarray:
-        return np.flipud(grid)
-
-    @staticmethod
-    def recolor_most_frequent(grid: np.ndarray) -> np.ndarray:
-        result = np.copy(grid)
-        non_zero = result[result > 0]
-        if len(non_zero) > 0:
-            counts = np.bincount(non_zero)
-            result[result == 0] = np.argmax(counts)
-        return result
-
-    @staticmethod
-    def crop_non_zero(grid: np.ndarray) -> np.ndarray:
-        coords = np.argwhere(grid > 0)
-        if len(coords) == 0:
-            return np.copy(grid)
-        y_min, x_min = coords.min(axis=0)
-        y_max, x_max = coords.max(axis=0)
-        return grid[y_min:y_max+1, x_min:x_max+1]
-
-    @staticmethod
-    def replace_2_with_3(grid: np.ndarray) -> np.ndarray:
-        result = np.copy(grid)
-        result[result == 2] = 3
-        return result
+        if best_fn is not None:
+            try:
+                return best_fn(test_input)
+            except Exception:
+                return None
+        return None
