@@ -55,5 +55,6 @@ def run_batch_evaluation():
     print(f"Tingkat Akurasi   : {accuracy:.1f}%")
     print("==========================================")
 
+# BARIS WAJIB UNTUK MENJALANKAN KODE
 if __name__ == "__main__":
     run_batch_evaluation()
