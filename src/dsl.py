@@ -11,10 +11,10 @@ class ARCOperations:
             ARCOperations.rotate_180,
             ARCOperations.rotate_270,
             ARCOperations.flip_horizontal,
-            ARCOperations.flip_vertical,
             ARCOperations.recolor_most_frequent,
             ARCOperations.crop_non_zero,
             ARCOperations.replace_2_with_3,
+            ARCOperations.move_down,
         ]
 
     @staticmethod
@@ -46,10 +46,6 @@ class ARCOperations:
         return np.fliplr(grid)
 
     @staticmethod
-    def flip_vertical(grid: np.ndarray) -> np.ndarray:
-        return np.flipud(grid)
-
-    @staticmethod
     def recolor_most_frequent(grid: np.ndarray) -> np.ndarray:
         result = np.copy(grid)
         non_zero = result[result > 0]
@@ -71,4 +67,12 @@ class ARCOperations:
     def replace_2_with_3(grid: np.ndarray) -> np.ndarray:
         result = np.copy(grid)
         result[result == 2] = 3
+        return result
+
+    @staticmethod
+    def move_down(grid: np.ndarray) -> np.ndarray:
+        result = np.zeros_like(grid)
+        non_zero_rows = [row for row in grid if np.any(row > 0)]
+        if len(non_zero_rows) > 0:
+            result[-len(non_zero_rows):] = np.array(non_zero_rows)
         return result
